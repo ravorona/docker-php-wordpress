@@ -7,4 +7,5 @@ PHP Image for Wordpress
 ## Available tags
 
 -   latest
+-   8.1
 -   8.0
