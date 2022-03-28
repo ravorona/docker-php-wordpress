@@ -101,4 +101,42 @@ RUN { \
     echo 'html_errors = Off'; \
     } > /usr/local/etc/php/conf.d/error-logging.ini
 
+# Wordpress CLI
+#RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar; \
+#    chmod +x wp-cli.phar; \
+#    mv wp-cli.phar /usr/local/bin/wp; \
+#    wp --allow-root --version
+
+# https://make.wordpress.org/cli/2018/05/31/gpg-signature-change/
+# pub   rsa2048 2018-05-31 [SC]
+#       63AF 7AA1 5067 C056 16FD  DD88 A3A2 E8F2 26F0 BC06
+# uid           [ unknown] WP-CLI Releases <releases@wp-cli.org>
+# sub   rsa2048 2018-05-31 [E]
+ENV WORDPRESS_CLI_GPG_KEY 63AF7AA15067C05616FDDD88A3A2E8F226F0BC06
+ENV WORDPRESS_CLI_VERSION 2.6.0
+ENV WORDPRESS_CLI_SHA512 d73f9161a1f03b8ecaac7b196b6051fe847b3c402b9c92b1f6f3acbe5b1cf91f7260c0e499b8947bab75920ecec918b39533ca65fa5a1fd3eb6ce7b8e2c58e7d
+
+RUN set -ex; \
+    \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+    gnupg \
+    ; \
+    \
+    curl -o /usr/local/bin/wp.gpg -fL "https://github.com/wp-cli/wp-cli/releases/download/v${WORDPRESS_CLI_VERSION}/wp-cli-${WORDPRESS_CLI_VERSION}.phar.gpg"; \
+    \
+    GNUPGHOME="$(mktemp -d)"; export GNUPGHOME; \
+    gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$WORDPRESS_CLI_GPG_KEY"; \
+    gpg --batch --decrypt --output /usr/local/bin/wp /usr/local/bin/wp.gpg; \
+    gpgconf --kill all; \
+    rm -rf "$GNUPGHOME" /usr/local/bin/wp.gpg; unset GNUPGHOME; \
+    \
+    echo "$WORDPRESS_CLI_SHA512 */usr/local/bin/wp" | sha512sum -c -; \
+    chmod +x /usr/local/bin/wp; \
+    \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+    rm -rf /var/lib/apt/lists/*; \
+    \
+    wp --allow-root --version
+
 VOLUME /var/www/html
