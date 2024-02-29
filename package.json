@@ -1,0 +1,8 @@
+{
+  "name": "@ravorona/docker-php-wordpress",
+  "version": "8.2.0",
+  "description": "PHP image for wordpress",
+  "main": "Dockerfile",
+  "author": "яαvoroηα",
+  "license": "MIT"
+}
